@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.ejml.simple.SimpleMatrix;
 import org.junit.jupiter.api.Test;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -21,9 +20,9 @@ import edu.wpi.first.wpilibj.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpiutil.math.MatBuilder;
 import edu.wpi.first.wpiutil.math.Matrix;
 import edu.wpi.first.wpiutil.math.Nat;
+import edu.wpi.first.wpiutil.math.VecBuilder;
 import edu.wpi.first.wpiutil.math.numbers.N1;
 import edu.wpi.first.wpiutil.math.numbers.N2;
 import edu.wpi.first.wpiutil.math.numbers.N3;
@@ -54,14 +53,14 @@ public class KalmanFilterTest {
   // A swerve drive system where the states are [x, y, theta, vx, vy, vTheta]^T,
   // Y is [x, y, theta]^T and u is [ax, ay, alpha}^T
   LinearSystem<N6, N3, N3> m_swerveObserverSystem = new LinearSystem<>(
-      new MatBuilder<>(Nat.N6(), Nat.N6()).fill( // A
+      Matrix.mat(Nat.N6(), Nat.N6()).fill( // A
               0, 0, 0, 1, 0, 0,
               0, 0, 0, 0, 1, 0,
               0, 0, 0, 0, 0, 1,
               0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0),
-        new MatBuilder<>(Nat.N6(), Nat.N3()).fill( // B
+        Matrix.mat(Nat.N6(), Nat.N3()).fill( // B
               0, 0, 0,
               0, 0, 0,
               0, 0, 0,
@@ -69,19 +68,19 @@ public class KalmanFilterTest {
               0, 1, 0,
               0, 0, 1
         ),
-        new MatBuilder<>(Nat.N3(), Nat.N6()).fill( // C
+        Matrix.mat(Nat.N3(), Nat.N6()).fill( // C
               1, 0, 0, 0, 0, 0,
               0, 1, 0, 0, 0, 0,
               0, 0, 1, 0, 0, 0
         ),
-        new Matrix<>(new SimpleMatrix(3, 3))); // D
+        new Matrix<>(Nat.N3(), Nat.N3())); // D
 
   @Test
   @SuppressWarnings("LocalVariableName")
   public void testElevatorKalmanFilter() {
 
-    var Q = new MatBuilder<>(Nat.N2(), Nat.N1()).fill(0.05, 1.0);
-    var R = new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.0001);
+    var Q = VecBuilder.fill(0.05, 1.0);
+    var R = VecBuilder.fill(0.0001);
 
     assertDoesNotThrow(() -> new KalmanFilter<>(Nat.N2(), Nat.N1(), elevatorPlant, Q, R, kDt));
   }
@@ -94,9 +93,9 @@ public class KalmanFilterTest {
 
     var filter = new KalmanFilter<>(Nat.N6(), Nat.N3(),
           m_swerveObserverSystem,
-          new MatBuilder<>(Nat.N6(), Nat.N1()).fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
+          VecBuilder.fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
           // weights
-          new MatBuilder<>(Nat.N3(), Nat.N1()).fill(2, 2, 2), // measurement weights
+          VecBuilder.fill(2, 2, 2), // measurement weights
           0.020
     );
 
@@ -108,12 +107,12 @@ public class KalmanFilterTest {
     Matrix<N3, N1> measurement;
     for (int i = 0; i < 100; i++) {
       // the robot is at [0, 0, 0] so we just park here
-      measurement = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(
+      measurement = VecBuilder.fill(
             random.nextGaussian(), random.nextGaussian(), random.nextGaussian());
-      filter.correct(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.0, 0.0, 0.0), measurement);
+      filter.correct(VecBuilder.fill(0.0, 0.0, 0.0), measurement);
 
       // we continue to not accelerate
-      filter.predict(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.0, 0.0, 0.0), 0.020);
+      filter.predict(VecBuilder.fill(0.0, 0.0, 0.0), 0.020);
 
       measurementsX.add(measurement.get(0, 0));
       measurementsY.add(measurement.get(1, 0));
@@ -141,9 +140,9 @@ public class KalmanFilterTest {
 
     var filter = new KalmanFilter<>(Nat.N6(), Nat.N3(),
           m_swerveObserverSystem,
-          new MatBuilder<>(Nat.N6(), Nat.N1()).fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
+          VecBuilder.fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
           // weights
-          new MatBuilder<>(Nat.N3(), Nat.N1()).fill(4, 4, 4), // measurement weights
+          VecBuilder.fill(4, 4, 4), // measurement weights
           0.020
     );
 
@@ -158,16 +157,16 @@ public class KalmanFilterTest {
 
     for (int i = 0; i < 300; i++) {
       // the robot is at [0, 0, 0] so we just park here
-      var measurement = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(
+      var measurement = VecBuilder.fill(
             random.nextGaussian() / 10d,
             random.nextGaussian() / 10d,
             random.nextGaussian() / 4d // std dev of [1, 1, 1]
       );
 
-      filter.correct(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.0, 0.0, 0.0), measurement);
+      filter.correct(VecBuilder.fill(0.0, 0.0, 0.0), measurement);
 
       // we continue to not accelerate
-      filter.predict(new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.0, 0.0, 0.0), 0.020);
+      filter.predict(VecBuilder.fill(0.0, 0.0, 0.0), 0.020);
 
       measurementsX.add(measurement.get(0, 0));
       measurementsY.add(measurement.get(1, 0));
@@ -195,9 +194,9 @@ public class KalmanFilterTest {
 
     var filter = new KalmanFilter<>(Nat.N6(), Nat.N3(),
           m_swerveObserverSystem,
-          new MatBuilder<>(Nat.N6(), Nat.N1()).fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
+          VecBuilder.fill(0.1, 0.1, 0.1, 0.1, 0.1, 0.1), // state
           // weights
-          new MatBuilder<>(Nat.N3(), Nat.N1()).fill(4, 4, 4), // measurement weights
+          VecBuilder.fill(4, 4, 4), // measurement weights
           0.020
     );
 
@@ -213,17 +212,17 @@ public class KalmanFilterTest {
           ), new TrajectoryConfig(2, 2)
     );
     var time = 0.0;
-    var lastVelocity = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.0, 0.0, 0.0);
+    var lastVelocity = VecBuilder.fill(0.0, 0.0, 0.0);
 
     while (time <= trajectory.getTotalTimeSeconds()) {
       var sample = trajectory.sample(time);
-      var measurement = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(
+      var measurement = VecBuilder.fill(
             sample.poseMeters.getTranslation().getX() + random.nextGaussian() / 5d,
             sample.poseMeters.getTranslation().getY() + random.nextGaussian() / 5d,
             sample.poseMeters.getRotation().getRadians() + random.nextGaussian() / 3d
       );
 
-      var velocity = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(
+      var velocity = VecBuilder.fill(
             sample.velocityMetersPerSecond * sample.poseMeters.getRotation().getCos(),
             sample.velocityMetersPerSecond * sample.poseMeters.getRotation().getSin(),
             sample.curvatureRadPerMeter * sample.velocityMetersPerSecond

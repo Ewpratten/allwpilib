@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.math.StateSpaceUtil;
 import edu.wpi.first.wpilibj.system.LinearSystem;
 import edu.wpi.first.wpiutil.math.Drake;
 import edu.wpi.first.wpiutil.math.Matrix;
-import edu.wpi.first.wpiutil.math.MatrixUtils;
 import edu.wpi.first.wpiutil.math.Nat;
 import edu.wpi.first.wpiutil.math.Num;
 import edu.wpi.first.wpiutil.math.numbers.N1;
@@ -124,7 +123,7 @@ public class KalmanFilter<S extends Num, I extends Num,
 
   @Override
   public void reset() {
-    m_xHat = MatrixUtils.zeros(m_states);
+    m_xHat = new Matrix<>(m_states, Nat.N1());
   }
 
   /**
@@ -280,11 +279,10 @@ public class KalmanFilter<S extends Num, I extends Num,
     //
     // K^T = S^T.solve(CP^T)
     // K = (S^T.solve(CP^T))^T
-    Matrix<S, R> K = new Matrix<>(S.transpose().getStorage()
-          .solve((C.times(m_P.transpose())).getStorage()).transpose());
+    Matrix<S, R> K = S.transpose().solve(C.times(m_P.transpose())).transpose();
 
     m_xHat = m_xHat.plus(K.times(y.minus(C.times(m_xHat).plus(D.times(u)))));
-    m_P = MatrixUtils.eye(m_states).minus(K.times(C)).times(m_P);
+    m_P = Matrix.eye(m_states).minus(K.times(C)).times(m_P);
   }
 
 }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.ejml.simple.SimpleMatrix;
 import org.junit.jupiter.api.Test;
 
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -23,7 +22,6 @@ import edu.wpi.first.wpilibj.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpiutil.math.Matrix;
-import edu.wpi.first.wpiutil.math.MatrixUtils;
 import edu.wpi.first.wpiutil.math.Nat;
 import edu.wpi.first.wpiutil.math.VecBuilder;
 import edu.wpi.first.wpiutil.math.numbers.N1;
@@ -57,7 +55,7 @@ public class ExtendedKalmanFilterTest {
     final var Vl = u.get(0, 0);
     final var Vr = u.get(1, 0);
 
-    final Matrix<N5, N1> result = new Matrix<>(new SimpleMatrix(5, 1));
+    final Matrix<N5, N1> result = new Matrix<>(Nat.N5(), Nat.N1());
     final var v = 0.5 * (vl + vr);
     result.set(0, 0, v * Math.cos(x.get(2, 0)));
     result.set(1, 0, v * Math.sin(x.get(2, 0)));
@@ -130,10 +128,10 @@ public class ExtendedKalmanFilterTest {
           new TrajectoryConfig(8.8, 0.1)
     );
 
-    Matrix<N5, N1> r = MatrixUtils.zeros(Nat.N5(), Nat.N1());
+    Matrix<N5, N1> r = new Matrix<>(Nat.N5(), Nat.N1());
 
-    Matrix<N5, N1> nextR = MatrixUtils.zeros(Nat.N5(), Nat.N1());
-    Matrix<N2, N1> u = MatrixUtils.zeros(Nat.N2(), Nat.N1());
+    Matrix<N5, N1> nextR = new Matrix<>(Nat.N5(), Nat.N1());
+    Matrix<N2, N1> u = new Matrix<>(Nat.N2(), Nat.N1());
 
     List<Double> trajXs = new ArrayList<>();
     List<Double> trajYs = new ArrayList<>();
@@ -142,7 +140,7 @@ public class ExtendedKalmanFilterTest {
     List<Double> observerYs = new ArrayList<>();
 
     var B = NumericalJacobian.numericalJacobianU(Nat.N5(), Nat.N2(),
-          ExtendedKalmanFilterTest::getDynamics, MatrixUtils.zeros(Nat.N5(), Nat.N1()), u);
+          ExtendedKalmanFilterTest::getDynamics, new Matrix<>(Nat.N5(), Nat.N1()), u);
 
     observer.setXhat(VecBuilder.fill(
           trajectory.getInitialPose().getTranslation().getX(),
@@ -171,8 +169,7 @@ public class ExtendedKalmanFilterTest {
             localY.plus(StateSpaceUtil.makeWhiteNoiseVector(whiteNoiseStdDevs)));
 
       Matrix<N5, N1> rdot = nextR.minus(r).div(dtSeconds);
-      u = new Matrix<>(B.getStorage()
-            .solve(rdot.minus(getDynamics(r, MatrixUtils.zeros(Nat.N2(), Nat.N1()))).getStorage()));
+      u = new Matrix<>(B.solve(rdot.minus(getDynamics(r, new Matrix<>(Nat.N2(), Nat.N1())))));
 
       observer.predict(u, dtSeconds);
 

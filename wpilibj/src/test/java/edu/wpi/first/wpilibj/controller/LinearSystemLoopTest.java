@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.ejml.simple.SimpleMatrix;
 import org.junit.jupiter.api.Test;
 
 import edu.wpi.first.wpilibj.estimator.KalmanFilter;
@@ -20,7 +19,6 @@ import edu.wpi.first.wpilibj.system.LinearSystemLoop;
 import edu.wpi.first.wpilibj.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpiutil.math.MatBuilder;
 import edu.wpi.first.wpiutil.math.Matrix;
 import edu.wpi.first.wpiutil.math.Nat;
 import edu.wpi.first.wpiutil.math.VecBuilder;
@@ -41,13 +39,13 @@ public class LinearSystemLoopTest {
     LinearSystem<N2, N1, N1> plant = LinearSystemId.createElevatorSystem(DCMotor.getVex775Pro(2), 5,
           0.0181864, 1.0);
     KalmanFilter<N2, N1, N1> observer = new KalmanFilter<>(Nat.N2(), Nat.N1(), plant,
-          new MatBuilder<>(Nat.N2(), Nat.N1()).fill(0.05, 1.0),
-          new MatBuilder<>(Nat.N1(), Nat.N1()).fill(0.0001), kDt);
+          VecBuilder.fill(0.05, 1.0),
+          VecBuilder.fill(0.0001), kDt);
 
-    var qElms = new Matrix<N2, N1>(new SimpleMatrix(2, 1));
-    qElms.getStorage().setColumn(0, 0, 0.02, 0.4);
-    var rElms = new Matrix<N1, N1>(new SimpleMatrix(1, 1));
-    rElms.getStorage().setColumn(0, 0, 12.0);
+    var qElms = new Matrix<>(Nat.N2(), Nat.N1());
+    qElms.setColumn(0, VecBuilder.fill(0.02, 0.4));
+    var rElms = new Matrix<>(Nat.N1(), Nat.N1());
+    rElms.setColumn(0, VecBuilder.fill(12.0));
     var dt = 0.00505;
 
     var controller = new LinearQuadraticRegulator<>(
@@ -59,7 +57,7 @@ public class LinearSystemLoopTest {
   @SuppressWarnings("LocalVariableName")
   private static void updateTwoState(LinearSystemLoop<N2, N1, N1> loop, double noise) {
     Matrix<N1, N1> y = loop.getPlant().calculateY(loop.getXHat(), loop.getU()).plus(
-          new MatBuilder<>(Nat.N1(), Nat.N1()).fill(noise)
+          VecBuilder.fill(noise)
     );
 
     loop.correct(y);
@@ -71,7 +69,7 @@ public class LinearSystemLoopTest {
   public void testStateSpaceEnabled() {
 
     m_loop.reset(VecBuilder.fill(0, 0));
-    Matrix<N2, N1> references = new MatBuilder<>(Nat.N2(), Nat.N1()).fill(2.0, 0.0);
+    Matrix<N2, N1> references = VecBuilder.fill(2.0, 0.0);
     var constraints = new TrapezoidProfile.Constraints(4, 3);
     m_loop.setNextR(references);
 
@@ -83,7 +81,7 @@ public class LinearSystemLoopTest {
             new TrapezoidProfile.State(references.get(0, 0), references.get(1, 0))
       );
       state = profile.calculate(kDt);
-      m_loop.setNextR(new MatBuilder<>(Nat.N2(), Nat.N1()).fill(state.position, state.velocity));
+      m_loop.setNextR(VecBuilder.fill(state.position, state.velocity));
 
       updateTwoState(m_loop, (random.nextGaussian()) * kPositionStddev);
       var u = m_loop.getU(0);
@@ -103,11 +101,11 @@ public class LinearSystemLoopTest {
     LinearSystem<N1, N1, N1> plant = LinearSystemId.createFlywheelSystem(DCMotor.getNEO(2),
           0.00289, 1.0);
     KalmanFilter<N1, N1, N1> observer = new KalmanFilter<>(Nat.N1(), Nat.N1(), plant,
-          new MatBuilder<>(Nat.N1(), Nat.N1()).fill(1.0),
-          new MatBuilder<>(Nat.N1(), Nat.N1()).fill(kPositionStddev), kDt);
+          VecBuilder.fill(1.0),
+          VecBuilder.fill(kPositionStddev), kDt);
 
-    var qElms = new MatBuilder<>(Nat.N1(), Nat.N1()).fill(9.0);
-    var rElms = new MatBuilder<>(Nat.N1(), Nat.N1()).fill(12.0);
+    var qElms = VecBuilder.fill(9.0);
+    var rElms = VecBuilder.fill(12.0);
 
     var controller = new LinearQuadraticRegulator<>(
           plant, qElms, rElms, kDt);
@@ -117,7 +115,7 @@ public class LinearSystemLoopTest {
     var loop = new LinearSystemLoop<>(plant, controller, feedforward, observer, 12);
 
     loop.reset(VecBuilder.fill(0.0));
-    var references = new MatBuilder<>(Nat.N1(), Nat.N1()).fill(3000 / 60d * 2 * Math.PI);
+    var references = VecBuilder.fill(3000 / 60d * 2 * Math.PI);
 
     loop.setNextR(references);
 
@@ -137,7 +135,7 @@ public class LinearSystemLoopTest {
       loop.setNextR(references);
 
       Matrix<N1, N1> y = loop.getPlant().calculateY(loop.getXHat(), loop.getU()).plus(
-            new MatBuilder<>(Nat.N1(), Nat.N1()).fill(random.nextGaussian() * kPositionStddev)
+            VecBuilder.fill(random.nextGaussian() * kPositionStddev)
       );
 
       loop.correct(y);
