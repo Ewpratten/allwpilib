@@ -168,6 +168,7 @@ public class MatrixTest {
     matrix = Matrix.mat(Nat.N2(), Nat.N2()).fill(1, 2, 3, 4);
     result = matrix.times(0.01).exp();
 
-    assertTrue(result.isEqual(Matrix.mat(Nat.N2(), Nat.N2()).fill(1.01035625, 0.02050912, 0.03076368, 1.04111993), 1E-8));
+    assertTrue(result.isEqual(Matrix.mat(Nat.N2(), Nat.N2()).fill(1.01035625, 0.02050912,
+        0.03076368, 1.04111993), 1E-8));
   }
 }

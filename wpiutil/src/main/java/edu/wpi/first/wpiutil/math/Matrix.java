@@ -29,7 +29,7 @@ import edu.wpi.first.wpiutil.math.numbers.N1;
  * @param <R> The number of rows in this matrix.
  * @param <C> The number of columns in this matrix.
  */
-@SuppressWarnings("PMD.TooManyMethods")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.ExcessivePublicCount"})
 public class Matrix<R extends Num, C extends Num> {
   final SimpleMatrix m_storage;
 
@@ -48,10 +48,12 @@ public class Matrix<R extends Num, C extends Num> {
 
   /**
    * Constructs a new {@link Matrix} with the given storage.
-   * Caller should make sure that the provided generic bounds match the shape of the provided {@link Matrix}.
+   * Caller should make sure that the provided generic bounds match
+   * the shape of the provided {@link Matrix}.
    * 
-   * <p>NOTE:It is not recommend to use this constructor unless the {@link SimpleMatrix} API is absolutely
-   * necessary due to the desired function not being accessible through the {@link Matrix} wrapper.
+   * <p>NOTE:It is not recommend to use this constructor unless the 
+   * {@link SimpleMatrix} API is absolutely necessary due to the desired
+   * function not being accessible through the {@link Matrix} wrapper.
    *
    * @param storage The {@link SimpleMatrix} to back this value.
    */
@@ -215,16 +217,17 @@ public class Matrix<R extends Num, C extends Num> {
   }
 
   /**
-   * Returns a matrix which is the result of an element by element multiplication of "this" and b.
+   * Returns a matrix which is the result of an element by element multiplication of
+   * "this" and other.
    * 
-   * <p>c<sub>i,j</sub> = a<sub>i,j</sub>*b<sub>i,j</sub>
+   * <p>c<sub>i,j</sub> = a<sub>i,j</sub>*other<sub>i,j</sub>
    * 
    *
-   * @param b The other {@link Matrix} to preform element multiplication on.
-   * @return The element by element multiplication of "this" and b.
+   * @param other The other {@link Matrix} to preform element multiplication on.
+   * @return The element by element multiplication of "this" and other.
    */
-  public final Matrix<R, C> elementTimes(Matrix<R, C> b) {
-    return new Matrix<>(this.m_storage.elementMult(Objects.requireNonNull(b).m_storage));
+  public final Matrix<R, C> elementTimes(Matrix<R, C> other) {
+    return new Matrix<>(this.m_storage.elementMult(Objects.requireNonNull(other).m_storage));
   }
 
   /**
@@ -328,6 +331,7 @@ public class Matrix<R extends Num, C extends Num> {
    * @param b The right-hand side of the equation to solve.
    * @return The solution to the linear system.
    */
+  @SuppressWarnings("ParameterName")
   public final <C2 extends Num> Matrix<C, C2> solve(Matrix<R, C2> b) {
     return new Matrix<>(this.m_storage.solve(Objects.requireNonNull(b).m_storage));
   }
@@ -471,23 +475,26 @@ public class Matrix<R extends Num, C extends Num> {
    * @param startingCol  The column to start at.
    * @param other  The matrix to assign the block to.
    */
-  public <R2 extends Num, C2 extends Num> void assignBlock(int startingRow, int startingCol, Matrix<R2, C2> other) {
+  public <R2 extends Num, C2 extends Num> void assignBlock(int startingRow, int startingCol,
+                                                           Matrix<R2, C2> other) {
     this.m_storage.insertIntoThis(
-      startingRow,
-      startingCol,
-      Objects.requireNonNull(other).m_storage);
+        startingRow,
+        startingCol,
+        Objects.requireNonNull(other).m_storage);
   }
 
   /**
-   * Extracts a submatrix from the supplied matrix and inserts it in a submatrix in "this". The shape of "this"
-   * is used to determine the size of the matrix extracted.
+   * Extracts a submatrix from the supplied matrix and inserts it in a submatrix in "this". The
+   * shape of "this" is used to determine the size of the matrix extracted.
    *
    * @param startingRow The starting row in the supplied matrix to extract the submatrix.
    * @param startingCol The starting column in the supplied matrix to extract the submatrix.
    * @param other       The matrix to extract the submatrix from.
    */
-  public <R2 extends Num, C2 extends Num> void extractFrom(int startingRow, int startingCol, Matrix<R2, C2> other) {
-    CommonOps_DDRM.extract(other.m_storage.getDDRM(), startingRow, startingCol, this.m_storage.getDDRM());
+  public <R2 extends Num, C2 extends Num> void extractFrom(int startingRow, int startingCol,
+                                                           Matrix<R2, C2> other) {
+    CommonOps_DDRM.extract(other.m_storage.getDDRM(), startingRow, startingCol,
+        this.m_storage.getDDRM());
   }
 
   /**
@@ -518,7 +525,8 @@ public class Matrix<R extends Num, C extends Num> {
         return new Matrix<>(new SimpleMatrix(temp.numRows(), temp.numCols()));
       }
 
-      throw new RuntimeException("Cholesky decomposition failed! Input matrix:\n" + m_storage.toString());
+      throw new RuntimeException("Cholesky decomposition failed! Input matrix:\n"
+          + m_storage.toString());
     }
 
     return new Matrix<>(SimpleMatrix.wrap(chol.getT(null)));
@@ -576,7 +584,8 @@ public class Matrix<R extends Num, C extends Num> {
    * @param mat The {@link Matrix} to remove the dimensions from.
    * @return The matrix with reassigned dimensions.
    */
-  public static <R1 extends Num, C1 extends Num> Matrix<R1, C1> changeBoundsUnchecked(Matrix<?, ?> mat) {
+  public static <R1 extends Num, C1 extends Num> Matrix<R1, C1> changeBoundsUnchecked(
+      Matrix<?, ?> mat) {
     return new Matrix<>(mat.m_storage);
   }
 
@@ -629,16 +638,27 @@ public class Matrix<R extends Num, C extends Num> {
    * 
    * <p>a<sub>ij</sub> == b<sub>ij</sub>
    * 
-   * @param o The Object to check against this {@link Matrix}.
+   * @param other The Object to check against this {@link Matrix}.
    * @return true if the object supplied is a {@link Matrix} and is equal to this matrix.
    */
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+  public boolean equals(Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (other == null || getClass() != other.getClass()) {
+      return false;
+    }
 
-    Matrix<?, ?> matrix = (Matrix<?, ?>) o;
-    if (MatrixFeatures_DDRM.hasUncountable(matrix.m_storage.getDDRM())) return false;
+    Matrix<?, ?> matrix = (Matrix<?, ?>) other;
+    if (MatrixFeatures_DDRM.hasUncountable(matrix.m_storage.getDDRM())) {
+      return false;
+    }
     return MatrixFeatures_DDRM.isEquals(this.m_storage.getDDRM(), matrix.m_storage.getDDRM());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(m_storage);
   }
 }
