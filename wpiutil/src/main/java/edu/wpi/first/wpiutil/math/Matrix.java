@@ -467,8 +467,8 @@ public class Matrix<R extends Num, C extends Num> {
   /**
    * Assign a matrix of a given size and start position.
    *
-   * @param height The number of rows of the extracted matrix.
-   * @param width  The number of columns of the extracted matrix.
+   * @param startingRow The row to start at.
+   * @param startingCol  The column to start at.
    * @param other  The matrix to assign the block to.
    */
   public <R2 extends Num, C2 extends Num> void assignBlock(int startingRow, int startingCol, Matrix<R2, C2> other) {
